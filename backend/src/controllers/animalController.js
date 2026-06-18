@@ -96,14 +96,17 @@ const create = async (req, res) => {
 
     if (!tag || !sex) return res.status(400).json({ error: 'tag e sex obrigatórios' });
 
+    // Converte strings vazias para null em campos UUID
+    const toUuid = v => (v && v.trim() !== '' ? v : null);
+
     const result = await db.query(
       `INSERT INTO animals
          (farm_id,tag,name,sex,breed_id,birth_date,birth_type,
           mother_id,father_id,current_pasture_id,entry_type,entry_date,notes)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
-      [farmId, tag, name, sex, breed_id, birth_date, birth_type || 'natural',
-       mother_id, father_id, current_pasture_id,
-       entry_type || 'birth', entry_date || new Date().toISOString().split('T')[0], notes]
+      [farmId, tag, name || null, sex, toUuid(breed_id), birth_date || null, birth_type || 'natural',
+       toUuid(mother_id), toUuid(father_id), toUuid(current_pasture_id),
+       entry_type || 'birth', entry_date || new Date().toISOString().split('T')[0], notes || null]
     );
     const animal = result.rows[0];
 
@@ -141,11 +144,13 @@ const update = async (req, res) => {
       mother_id, father_id, current_pasture_id, notes
     } = req.body;
 
+    const toUuid = v => (v && v.trim() !== '' ? v : null);
     const result = await db.query(
       `UPDATE animals SET tag=$1,name=$2,sex=$3,breed_id=$4,birth_date=$5,
        birth_type=$6,mother_id=$7,father_id=$8,current_pasture_id=$9,notes=$10
        WHERE id=$11 RETURNING *`,
-      [tag,name,sex,breed_id,birth_date,birth_type,mother_id,father_id,current_pasture_id,notes,id]
+      [tag, name||null, sex, toUuid(breed_id), birth_date||null, birth_type,
+       toUuid(mother_id), toUuid(father_id), toUuid(current_pasture_id), notes||null, id]
     );
     if (!result.rows.length) return res.status(404).json({ error: 'Animal não encontrado' });
     res.json(result.rows[0]);
