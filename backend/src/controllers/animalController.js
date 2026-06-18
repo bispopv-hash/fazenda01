@@ -126,7 +126,7 @@ const create = async (req, res) => {
        VALUES ($1,$2,$3,$4,$5,$6,$7)`,
       [animal.id, farmId, evtType,
        entry_date || new Date().toISOString().split('T')[0],
-       seller_name, purchase_price, req.user.id]
+       seller_name || null, purchase_price || null, req.user.id]
     );
 
     res.status(201).json(animal);
