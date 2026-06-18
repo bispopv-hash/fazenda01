@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fazenda_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-fazenda_db}
+      POSTGRES_USER: ${DB_USER:-fazenda_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-fazenda_pass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: fazenda_api
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-fazenda_db}
+      DB_USER: ${DB_USER:-fazenda_user}
+      DB_PASSWORD: ${DB_PASSWORD:-fazenda_pass}
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey2024}
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    container_name: fazenda_web
+    environment:
+      REACT_APP_API_URL: http://localhost:3001
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
