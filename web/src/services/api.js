@@ -1,17 +1,15 @@
 import axios from 'axios';
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
-const api = axios.create({ baseURL: `${BASE_URL}/api` });
+const api = axios.create({ baseURL: BASE_URL });
 
-// Injeta token em todo request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Redireciona para login em 401
 api.interceptors.response.use(
   (r) => r,
   (err) => {
