@@ -37,6 +37,7 @@ export default function Sidebar() {
         <span className="sidebar-section">Operações</span>
         {nav('/weightings', '⚖️', 'Pesagens')}
         {nav('/managements', '💉', 'Manejos')}
+        {nav('/management-types', '📋', 'Tipos de Manejo')}
         {nav('/events', '📋', 'Eventos')}
 
         <span className="sidebar-section">Relatórios</span>

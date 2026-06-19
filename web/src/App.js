@@ -10,6 +10,7 @@ import PasturesPage from './pages/PasturesPage';
 import FarmsPage from './pages/FarmsPage';
 import UsersPage from './pages/UsersPage';
 import ReportsPage from './pages/ReportsPage';
+import ManagementTypesPage from './pages/ManagementTypesPage';
 import './index.css';
 
 // Placeholder simples para páginas secundárias
@@ -63,6 +64,7 @@ export default function App() {
             <Route path="pastures" element={<PasturesPage />} />
             <Route path="weightings" element={<WeightingsPage />} />
             <Route path="managements" element={<ManagementsPage />} />
+            <Route path="management-types" element={<ManagementTypesPage />} />
             <Route path="events" element={<EventsPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="farms" element={<FarmsPage />} />
