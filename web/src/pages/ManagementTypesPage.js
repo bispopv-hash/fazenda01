@@ -3,12 +3,14 @@ import api from '../services/api';
 
 const CATEGORIES = [
   { value: '', label: 'Sem categoria' },
-  { value: 'vacina', label: '💉 Vacina' },
-  { value: 'vermifugo', label: '🐛 Vermífugo' },
-  { value: 'medicamento', label: '💊 Medicamento' },
-  { value: 'exame', label: '🔬 Exame' },
-  { value: 'reproducao', label: '🐄 Reprodução' },
-  { value: 'outro', label: '📋 Outro' },
+  { value: 'vaccine', label: '💉 Vacina' },
+  { value: 'antiparasitic', label: '🐛 Antiparasitário / Vermífugo' },
+  { value: 'vitamin', label: '🌿 Vitamina / Suplemento' },
+  { value: 'medication', label: '💊 Medicamento' },
+  { value: 'exam', label: '🔬 Exame' },
+  { value: 'reproduction', label: '🐄 Reprodução' },
+  { value: 'surgery', label: '🔪 Cirurgia' },
+  { value: 'other', label: '📋 Outro' },
 ];
 
 function TypeForm({ initial, onClose, onSaved }) {
