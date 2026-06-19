@@ -101,27 +101,33 @@ router.get('/users/:id/farms', auth, requireRole('admin', 'owner'), async (req, 
 });
 
 router.put('/users/:id', auth, requireRole('admin'), async (req, res) => {
-  const db = require('../utils/db');
-  const { name, role, active, farm_ids, password } = req.body;
-  const updates = ['name=$1', 'role=$2', 'active=$3'];
-  const values = [name, role, active];
-  if (password) {
-    const bcrypt = require('bcryptjs');
-    updates.push(`password_hash=$${values.length + 1}`);
-    values.push(await bcrypt.hash(password, 10));
-  }
-  values.push(req.params.id);
-  const r = await db.query(
-    `UPDATE users SET ${updates.join(',')} WHERE id=$${values.length} RETURNING id,name,email,role,active`,
-    values
-  );
-  if (farm_ids !== undefined) {
-    await db.query('DELETE FROM user_farms WHERE user_id=$1', [req.params.id]);
-    for (const fid of (farm_ids || [])) {
-      await db.query('INSERT INTO user_farms (user_id, farm_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [req.params.id, fid]);
+  try {
+    const db = require('../utils/db');
+    const bcrypt = require('bcrypt');
+    const { name, role, active, farm_ids, password } = req.body;
+    const updates = ['name=$1', 'role=$2', 'active=$3'];
+    const values = [name, role, active];
+    if (password && password.trim()) {
+      const hash = await bcrypt.hash(password, 10);
+      updates.push(`password_hash=$${values.length + 1}`);
+      values.push(hash);
     }
+    values.push(req.params.id);
+    const r = await db.query(
+      `UPDATE users SET ${updates.join(',')} WHERE id=$${values.length} RETURNING id,name,email,role,active`,
+      values
+    );
+    if (!r.rows.length) return res.status(404).json({ error: 'Usuário não encontrado' });
+    if (farm_ids !== undefined) {
+      await db.query('DELETE FROM user_farms WHERE user_id=$1', [req.params.id]);
+      for (const fid of (farm_ids || [])) {
+        await db.query('INSERT INTO user_farms (user_id, farm_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [req.params.id, fid]);
+      }
+    }
+    res.json(r.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json(r.rows[0]);
 });
 
 // =============================================
