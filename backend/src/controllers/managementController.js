@@ -77,4 +77,48 @@ const batchCreate = async (req, res) => {
   }
 };
 
-module.exports = { listTypes, list, create, batchCreate };
+const createType = async (req, res) => {
+  try {
+    const { name, category } = req.body;
+    if (!name) return res.status(400).json({ error: 'name obrigatório' });
+    const result = await db.query(
+      `INSERT INTO management_types (name, category) VALUES ($1, $2) RETURNING *`,
+      [name, category || null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const updateType = async (req, res) => {
+  try {
+    const { name, category } = req.body;
+    const result = await db.query(
+      `UPDATE management_types SET name=$1, category=$2 WHERE id=$3 RETURNING *`,
+      [name, category || null, req.params.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: 'Tipo não encontrado' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const removeType = async (req, res) => {
+  try {
+    const inUse = await db.query(
+      'SELECT 1 FROM managements WHERE management_type_id=$1 LIMIT 1',
+      [req.params.id]
+    );
+    if (inUse.rows.length) {
+      return res.status(409).json({ error: 'Tipo em uso — não pode ser excluído' });
+    }
+    await db.query('DELETE FROM management_types WHERE id=$1', [req.params.id]);
+    res.status(204).end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = { listTypes, createType, updateType, removeType, list, create, batchCreate };

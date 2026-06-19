@@ -59,6 +59,9 @@ router.post('/farms/:farmId/weightings/batch', auth, requireFarmAccess, weightCt
 // MANEJOS
 // =============================================
 router.get('/management-types', auth, mgmtCtrl.listTypes);
+router.post('/management-types', auth, requireRole('admin','owner','manager'), mgmtCtrl.createType);
+router.put('/management-types/:id', auth, requireRole('admin','owner','manager'), mgmtCtrl.updateType);
+router.delete('/management-types/:id', auth, requireRole('admin','owner','manager'), mgmtCtrl.removeType);
 router.get('/animals/:animalId/managements', auth, mgmtCtrl.list);
 router.post('/animals/:animalId/managements', auth, mgmtCtrl.create);
 router.post('/farms/:farmId/managements/batch', auth, requireFarmAccess, mgmtCtrl.batchCreate);
