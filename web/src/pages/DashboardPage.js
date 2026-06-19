@@ -68,7 +68,7 @@ export default function DashboardPage() {
           <div className="stat-label">Vendidos</div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon">🪦</div>
+          <div className="stat-icon">💀</div>
           <div className="stat-value">{animals.dead}</div>
           <div className="stat-label">Mortes</div>
         </div>
