@@ -91,12 +91,29 @@ router.get('/users', auth, requireRole('admin','owner'), async (req, res) => {
   res.json(r.rows);
 });
 
+router.get('/users/:id/farms', auth, requireRole('admin', 'owner'), async (req, res) => {
+  const db = require('../utils/db');
+  const r = await db.query(
+    'SELECT f.id, f.name FROM farms f JOIN user_farms uf ON uf.farm_id=f.id WHERE uf.user_id=$1 ORDER BY f.name',
+    [req.params.id]
+  );
+  res.json(r.rows);
+});
+
 router.put('/users/:id', auth, requireRole('admin'), async (req, res) => {
   const db = require('../utils/db');
-  const { name, role, active, farm_ids } = req.body;
+  const { name, role, active, farm_ids, password } = req.body;
+  const updates = ['name=$1', 'role=$2', 'active=$3'];
+  const values = [name, role, active];
+  if (password) {
+    const bcrypt = require('bcryptjs');
+    updates.push(`password_hash=$${values.length + 1}`);
+    values.push(await bcrypt.hash(password, 10));
+  }
+  values.push(req.params.id);
   const r = await db.query(
-    'UPDATE users SET name=$1, role=$2, active=$3 WHERE id=$4 RETURNING id,name,email,role,active',
-    [name, role, active, req.params.id]
+    `UPDATE users SET ${updates.join(',')} WHERE id=$${values.length} RETURNING id,name,email,role,active`,
+    values
   );
   if (farm_ids !== undefined) {
     await db.query('DELETE FROM user_farms WHERE user_id=$1', [req.params.id]);
