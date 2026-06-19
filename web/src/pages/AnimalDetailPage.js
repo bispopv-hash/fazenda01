@@ -38,6 +38,53 @@ function WeightForm({ animalId, onSaved, onClose }) {
   );
 }
 
+function ManagementForm({ animalId, onSaved, onClose }) {
+  const [types, setTypes] = useState([]);
+  const [form, setForm] = useState({ management_type_id: '', management_date: new Date().toISOString().split('T')[0], notes: '' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => { api.get('/management-types').then(r => setTypes(r.data)); }, []);
+
+  const submit = async (e) => {
+    e.preventDefault(); setSaving(true); setError('');
+    try {
+      await api.post(`/animals/${animalId}/managements`, form);
+      onSaved();
+    } catch (err) { setError(err.response?.data?.error || 'Erro ao salvar'); setSaving(false); }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal" style={{ maxWidth: 440 }}>
+        <h2 className="modal-title">💉 Registrar Manejo</h2>
+        {error && <div className="alert alert-error">{error}</div>}
+        <form onSubmit={submit}>
+          <div className="form-group" style={{ marginBottom: 12 }}>
+            <label>Tipo de Manejo *</label>
+            <select required value={form.management_type_id} onChange={e => setForm({ ...form, management_type_id: e.target.value })}>
+              <option value="">Selecionar...</option>
+              {types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group" style={{ marginBottom: 12 }}>
+            <label>Data</label>
+            <input type="date" value={form.management_date} onChange={e => setForm({ ...form, management_date: e.target.value })} />
+          </div>
+          <div className="form-group" style={{ marginBottom: 12 }}>
+            <label>Observações</label>
+            <textarea rows={3} value={form.notes} placeholder="Ex: Animal reagiu bem, próxima dose em 30 dias..." onChange={e => setForm({ ...form, notes: e.target.value })} />
+          </div>
+          <div className="form-actions">
+            <button type="button" className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+            <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Salvando...' : '💾 Salvar'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function EventForm({ animal, pastures, onSaved, onClose }) {
   const [form, setForm] = useState({ event_type: 'sale', event_date: new Date().toISOString().split('T')[0], counterpart: '', price: '', cause_of_death: '', destination_farm: '', notes: '' });
   const [saving, setSaving] = useState(false);
@@ -111,6 +158,7 @@ export default function AnimalDetailPage() {
   const [pastures, setPastures] = useState([]);
   const [tab, setTab] = useState('info');
   const [showWeight, setShowWeight] = useState(false);
+  const [showManagement, setShowManagement] = useState(false);
   const [showEvent, setShowEvent] = useState(false);
   const [showMoveForm, setShowMoveForm] = useState(false);
 
@@ -134,6 +182,7 @@ export default function AnimalDetailPage() {
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn btn-primary btn-sm" onClick={() => setShowWeight(true)}>⚖️ Pesagem</button>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowManagement(true)}>💉 Manejo</button>
           <button className="btn btn-secondary btn-sm" onClick={() => setShowMoveForm(true)}>🌿 Trocar Pasto</button>
           <button className="btn btn-danger btn-sm" onClick={() => setShowEvent(true)}>📋 Evento</button>
         </div>
@@ -191,16 +240,17 @@ export default function AnimalDetailPage() {
 
       {tab === 'managements' && (
         <div className="card">
-          <table><thead><tr><th>Data</th><th>Tipo</th><th>Produto</th><th>Dose</th><th>Responsável</th></tr></thead>
+          <table><thead><tr><th>Data</th><th>Tipo</th><th>Produto</th><th>Dose</th><th>Observações</th><th>Responsável</th></tr></thead>
             <tbody>
               {animal.managements?.length === 0
-                ? <tr><td colSpan={5} style={{ textAlign: 'center', padding: 24, color: '#9ca3af' }}>Sem manejos</td></tr>
+                ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 24, color: '#9ca3af' }}>Sem manejos</td></tr>
                 : animal.managements?.map(m => (
                   <tr key={m.id}>
                     <td>{fmtDate(m.management_date)}</td>
                     <td>{m.type_name || m.custom_type || '—'}</td>
                     <td>{m.product || '—'}</td>
                     <td>{m.dose || '—'}</td>
+                    <td>{m.notes || '—'}</td>
                     <td>{m.responsible_name || '—'}</td>
                   </tr>
                 ))}
@@ -249,6 +299,7 @@ export default function AnimalDetailPage() {
       )}
 
       {showWeight && <WeightForm animalId={id} onSaved={() => { setShowWeight(false); load(); }} onClose={() => setShowWeight(false)} />}
+      {showManagement && <ManagementForm animalId={id} onSaved={() => { setShowManagement(false); load(); }} onClose={() => setShowManagement(false)} />}
       {showEvent && <EventForm animal={animal} pastures={pastures} onSaved={() => { setShowEvent(false); load(); }} onClose={() => setShowEvent(false)} />}
       {showMoveForm && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowMoveForm(false)}>
